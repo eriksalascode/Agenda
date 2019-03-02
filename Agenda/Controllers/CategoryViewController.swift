@@ -11,6 +11,8 @@ import RealmSwift
 import ChameleonFramework
 
 class CategoryViewController: SwipeTableViewController {
+
+    //Begin a Realm database for the categories
     let realm = try! Realm()
     var categories: Results<Category>?
     
@@ -27,21 +29,7 @@ class CategoryViewController: SwipeTableViewController {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-
-        let cell = super.tableView(tableView, cellForRowAt: indexPath)
-        
-        if let category = categories?[indexPath.row] {
-            cell.textLabel?.text = category.name
-            
-            guard let categoryColor = UIColor(hexString: category.color) else {fatalError()}
-            
-            cell.backgroundColor = categoryColor
-            
-            cell.textLabel?.textColor = ContrastColorOf(categoryColor, returnFlat:true)
-        }
-        
-        return cell
-        
+        return categorySetup(indexPath: indexPath)
     }
     
     
@@ -56,7 +44,10 @@ class CategoryViewController: SwipeTableViewController {
         
         if let indexPath = tableView.indexPathForSelectedRow {
             destinationVC.selectedCategory = categories?[indexPath.row]
+            
+            destinationVC.delegate = self
         }
+    
     }
     
     //MARK: - Data Manipulation Methods
@@ -71,6 +62,32 @@ class CategoryViewController: SwipeTableViewController {
         }
         
         tableView.reloadData()
+    }
+
+    func categorySetup(indexPath: IndexPath) -> UITableViewCell {
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
+        
+        
+        if let category = categories?[indexPath.row] {
+            cell.textLabel?.font = UIFont(name:"Futura", size:20)
+            cell.detailTextLabel?.font = UIFont(name:"Futura", size:17)
+            cell.textLabel?.text = category.name
+            
+            guard let categoryColor = UIColor(hexString: category.color) else {fatalError()}
+            cell.backgroundColor = categoryColor
+            cell.textLabel?.textColor = ContrastColorOf(categoryColor, returnFlat:true)
+            
+            if categories?[indexPath.row].items.count != 0 {
+                cell.detailTextLabel?.isHidden = false
+                guard let itemCount = categories?[indexPath.row].items.count else {fatalError()}
+                cell.detailTextLabel?.text = String(itemCount)
+                cell.detailTextLabel?.textColor = ContrastColorOf(categoryColor, returnFlat: true)
+            } else {
+                cell.detailTextLabel?.isHidden = true
+            }
+            
+        }
+        return cell
     }
     
     func loadCategories() {
@@ -98,12 +115,12 @@ class CategoryViewController: SwipeTableViewController {
     @IBAction func addCategoryPressed(_ sender: UIBarButtonItem) {
         var textField = UITextField()
         let alert = UIAlertController(title: "Add New Category", message: "", preferredStyle: .alert)
+       
         let action = UIAlertAction(title: "Add", style: .default) { (action) in
-            
             let newCategory = Category()
             newCategory.name = textField.text!
             newCategory.color = UIColor.randomFlat.hexValue()
-                    
+            
             self.save(category: newCategory)
         }
         
@@ -115,5 +132,13 @@ class CategoryViewController: SwipeTableViewController {
         }
         
         present(alert, animated: true, completion: nil)
+    }
+    
+}
+
+//MARK - categoryItemCount protocol
+extension CategoryViewController: categoryItemCount {
+    func reloadCategoryItemCount() {
+        viewDidLoad()
     }
 }

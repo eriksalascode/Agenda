@@ -10,6 +10,10 @@ import UIKit
 import RealmSwift
 import ChameleonFramework
 
+protocol categoryItemCount {
+    func reloadCategoryItemCount()
+}
+
 class ItemViewController: SwipeTableViewController {
     
     var itemList: Results<Item>?
@@ -19,10 +23,17 @@ class ItemViewController: SwipeTableViewController {
             loadItems()
         }
     }
+    
+    var delegate : categoryItemCount?
+    
     @IBOutlet weak var searchBar: UISearchBar!
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        self.navigationItem.hidesBackButton = true
+        let newBackButton = UIBarButtonItem(title: "Back", style: UIBarButtonItem.Style.plain, target: self, action: #selector(ItemViewController.back(sender:)))
+        self.navigationItem.leftBarButtonItem = newBackButton
        
     }
     
@@ -152,6 +163,15 @@ class ItemViewController: SwipeTableViewController {
                 print("Error deleting Item, \(error)")
             }
         }
+    }
+    
+    @objc func back(sender: UIBarButtonItem) {
+        // Perform your custom actions
+        // ...
+        // Go back to the previous ViewController
+        print("Going to preview view controoler")
+        delegate?.reloadCategoryItemCount()
+        _ = navigationController?.popViewController(animated: true)
     }
     
 }
